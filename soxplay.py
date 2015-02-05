@@ -1,5 +1,5 @@
 #! /user/env/python
-import os
+import os, signal
 import random
 from subprocess import Popen
 import time
@@ -14,17 +14,14 @@ class Input_handler:
                                                 # keyboard
         for event in dev.read_loop():
             if event.type == ecodes.EV_KEY:
-                if "163" in str(event):
+                if "KEY_NEXTSONG" in str(event):
                     action = "next"
-                    print ">>"
                     return action
-                if "164" in str(event):
-                    action = "play pause"
-                    print "+/> detected"          
+                if "KEY_PLAYPAUSE" in str(event):
+                    action = "play"
                     return action
-                if "165" in str(event):
+                if all(EVIOUSSONG","up"] in str(event)):
                     action = "prev"
-                    print "<<"
                     return action   
 
 
@@ -58,7 +55,7 @@ class Controller():
     def play_pause(self, state, sox):
         if state == "pause":
             os.kill(sox.pid, signal.SIGCONT)
-            state = "pause"
+            state = "play"
             return state
         if state == "play":
             os.kill(sox.pid, signal.SIGSTOP)
@@ -69,8 +66,8 @@ class Controller():
 # number
 class SoxPlay:
     def play_song(self, song_name):  
-        pid = Popen(["play", str(song_name)])
-        return pid
+        sox = Popen(["play", str(song_name)])
+        return sox
 
 def main():
  
@@ -85,6 +82,7 @@ def main():
     sox = play.play_song(song_name)
 
     controller = Controller()
+    state = "play"
 #Wait for input
     getbutton = Input_handler()
 
@@ -100,6 +98,6 @@ def main():
             current_track = controller.prev(current_track)
             song_name = track_select.track_lookup(list, current_track)
             sox = play.play_song(song_name)
-            
-
+        if action == "play":
+            state = controller.play_pause(state, sox)
 main()
